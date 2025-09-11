@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Room</title>
+    <script src="static/room.js"></script>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        #room-layout {
+            --cell-size: 70px;
+
+            .row {
+                width: 100%;
+                display: flex;
+                justify-content: space-evenly;
+                margin: 16px;
+            }
+
+            .cell {
+                width: var(--cell-size);
+                height: var(--cell-size);
+                box-sizing: border-box;
+                border-radius: 8px;
+                display: inline-block;
+                border: 1px solid transparent;
+
+                &.computer {
+                    background-color: gray;
+                }
+            }
+        }
+    </style>
+</head>
+<body>
+<div id="room-layout"></div>
+</body>
+</html>

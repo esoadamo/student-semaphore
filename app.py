@@ -1,11 +1,15 @@
-from flask import Flask
+from flask import Flask, redirect
+from web import init_web_app
 
 app = Flask(__name__)
+app.config['TEMPLATES_AUTO_RELOAD'] = True
+
+init_web_app(app, '/room')
 
 
 @app.route('/')
-def hello_world():  # put application's code here
-    return 'Hello World!'
+def index():
+    return redirect('/room/')
 
 
 if __name__ == '__main__':
