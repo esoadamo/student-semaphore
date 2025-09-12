@@ -7,8 +7,9 @@
     <script src="static/room.js"></script>
     <link rel="stylesheet" href="static/room.css">
     <script>
+        const hostname = '{{ login.hostname | escape }}';
         window.addEventListener('load', () => {
-            initRoom('{{ room_id }}', document.getElementById('room-layout'))
+            initRoom(hostname, document.getElementById('room-layout'))
         })
     </script>
 </head>

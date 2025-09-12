@@ -1,20 +1,32 @@
 /**
- * @typedef {{name: string, status: string | null}} ComputerStatus
+ * @typedef {{name: string, hostname: string | null, status: string | null}} ComputerStatus
  * @typedef {(ComputerStatus | null)[][]} RoomLayout
  */
 
 /**
  * Load the room layout from a predefined configuration
- * @param roomId {string}
  * @returns {Promise<RoomLayout>} The room layout
  */
-async function fetchRoomStatus(roomId) {
-    const response = await fetch(`api/room/${roomId}`);
+async function fetchRoomStatus() {
+    const response = await fetch(`api/room`);
     return response.json();
 }
 
-async function refreshRoomStatus(roomId, layoutElement) {
-    const room = await fetchRoomStatus(roomId);
+async function assignComputer(rowIndex, collIndex) {
+    await fetch(`api/room/assign`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ row: rowIndex, col: collIndex })
+    });
+}
+
+async function refreshRoomStatus(hostname, layoutElement) {
+    const room = await fetchRoomStatus();
+
+    let computerSet = false;
+
     layoutElement.innerHTML = '';
     room.forEach((row, rIndex) => {
         const rowDiv = document.createElement('div');
@@ -38,6 +50,17 @@ async function refreshRoomStatus(roomId, layoutElement) {
                 cellDiv.classList.add(`status-${cell.status}`);
                 cellDiv.dataset.computer = JSON.stringify(cell);
                 nameDiv.textContent = cell.name;
+
+                if (cell.hostname === hostname) {
+                    cellDiv.classList.add('current');
+                    computerSet = true;
+                } else if (cell.hostname === null) {
+                    cellDiv.classList.add('unassigned');
+                    cellDiv.onclick = async () => {
+                        await assignComputer(rIndex, cIndex);
+                        await refreshRoomStatus(hostname, layoutElement);
+                    }
+                }
             }
 
             cellWrapper.appendChild(cellDiv);
@@ -51,11 +74,11 @@ async function refreshRoomStatus(roomId, layoutElement) {
 
 /**
  * Initialize the room layout
- * @param roomId {string}
+ * @param hostname {string}
  * @param layoutElement {HTMLElement}
  * @returns {Promise<number>}
  */
-async function initRoom(roomId, layoutElement) {
-    await refreshRoomStatus(roomId, layoutElement);
-    return setInterval(() => refreshRoomStatus(roomId, layoutElement), 7000);
+async function initRoom(hostname, layoutElement) {
+    await refreshRoomStatus(hostname, layoutElement);
+    return setInterval(() => refreshRoomStatus(hostname, layoutElement), 7000);
 }
