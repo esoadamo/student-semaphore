@@ -20,6 +20,18 @@ async function assignComputer(rowIndex, collIndex) {
         },
         body: JSON.stringify({ row: rowIndex, col: collIndex })
     });
+    await setComputerStatus('green');
+}
+
+
+async function setComputerStatus(status) {
+    await fetch(`api/room/status`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ status })
+    });
 }
 
 async function refreshRoomStatus(hostname, layoutElement) {
@@ -70,6 +82,26 @@ async function refreshRoomStatus(hostname, layoutElement) {
 
         layoutElement.appendChild(rowDiv);
     });
+
+    if (computerSet) {
+        // If the computer is set, then add a semaphore to the bottom
+        // Semaphore will allow to select the state of the computer
+        const semaphoreDiv = document.createElement('div');
+        semaphoreDiv.classList.add('semaphore');
+        const states = ['green', 'yellow', 'red'];
+        states.forEach(state => {
+            const stateDiv = document.createElement('div');
+            stateDiv.classList.add('semaphore-state');
+            stateDiv.classList.add(`status-${state}`);
+            stateDiv.title = state.replace('-', ' ').toUpperCase();
+            stateDiv.onclick = async () => {
+                await setComputerStatus(state);
+                await refreshRoomStatus(hostname, layoutElement);
+            };
+            semaphoreDiv.appendChild(stateDiv);
+        });
+        layoutElement.appendChild(semaphoreDiv);
+    }
 }
 
 /**
@@ -79,6 +111,7 @@ async function refreshRoomStatus(hostname, layoutElement) {
  * @returns {Promise<number>}
  */
 async function initRoom(hostname, layoutElement) {
+    await setComputerStatus('green');
     await refreshRoomStatus(hostname, layoutElement);
     return setInterval(() => refreshRoomStatus(hostname, layoutElement), 7000);
 }

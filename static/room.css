@@ -39,6 +39,16 @@ html, body {
                 border-color: white;
             }
 
+            &.status-green {
+                background-color: lightgreen;
+            }
+            &.status-yellow {
+                background-color: lightsalmon;
+            }
+            &.status-red {
+                background-color: lightcoral;
+            }
+
             &.unassigned {
                 background-color: gray;
 
@@ -56,5 +66,34 @@ html, body {
         max-width: var(--cell-size);
         white-space: nowrap;
         min-height: 1.5em;
+    }
+
+    .semaphore {
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        gap: 32px;
+        margin-top: 16px;
+
+        .semaphore-state {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            cursor: pointer;
+
+            &:hover {
+                opacity: 0.8;
+            }
+
+            &.status-green {
+                background-color: lightgreen;
+            }
+            &.status-yellow {
+                background-color: lightsalmon;
+            }
+            &.status-red {
+                background-color: lightcoral;
+            }
+        }
     }
 }

@@ -83,7 +83,31 @@ def init_web_app(app_root: Flask, route_prefix: str = '/'):
                 if ROOM[r][c] is not None and ROOM[r][c]['hostname'] == hostname:
                     ROOM[r][c] = {'name': '', 'hostname': None, 'status': None}
         # Assign new seat
-        ROOM[target_row][target_col] = {'name': '', 'hostname': hostname, 'status': 'active'}
+        ROOM[target_row][target_col] = {'name': '', 'hostname': hostname, 'status': None}
         return {'success': True}
+
+    @app.route('/api/room/status', methods=['POST'])
+    def app_api_room_status():
+        login = get_session()
+        hostname = login['hostname']
+        status = request.json.get('status')
+        for r in range(len(ROOM)):
+            for c in range(len(ROOM[r])):
+                if ROOM[r][c] is not None and ROOM[r][c]['hostname'] == hostname:
+                    ROOM[r][c]['status'] = status
+                    return {'success': True}
+        abort(403)
+
+    @app.route('/api/room/name', methods=['POST'])
+    def app_api_room_name():
+        login = get_session()
+        hostname = login['hostname']
+        name = request.json.get('name')
+        for r in range(len(ROOM)):
+            for c in range(len(ROOM[r])):
+                if ROOM[r][c] is not None and ROOM[r][c]['hostname'] == hostname:
+                    ROOM[r][c]['name'] = name
+                    return {'success': True}
+        abort(403)
 
     app_root.register_blueprint(app)
