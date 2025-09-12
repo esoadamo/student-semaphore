@@ -4,17 +4,24 @@ html, body {
     width: 100vw;
     height: 100vh;
     background: whitesmoke;
+    overflow-x: auto; /* Allow horizontal scrolling if needed */
+    overflow-y: auto; /* Allow vertical scrolling if needed */
 }
 
 #room-layout {
     --cell-size: 70px;
     padding: 16px;
+    min-width: 320px; /* Minimum width to prevent too much compression */
+    max-height: 100vh; /* Ensure it doesn't exceed viewport height */
+    box-sizing: border-box;
 
     .row {
         width: 100%;
         display: flex;
         justify-content: space-evenly;
         margin: 16px 0;
+        flex-wrap: wrap; /* Allow wrapping on very small screens */
+        gap: 8px; /* Add gap for better spacing when wrapped */
     }
 
     .cell-wrapper {
@@ -22,6 +29,7 @@ html, body {
         flex-direction: column;
         align-items: center;
         gap: 6px;
+        flex-shrink: 1; /* Allow shrinking */
     }
 
     .cell {
@@ -80,6 +88,7 @@ html, body {
             height: 64px;
             border-radius: 50%;
             cursor: pointer;
+            flex-shrink: 0; /* Prevent semaphore from shrinking */
 
             &:hover {
                 opacity: 0.8;
@@ -93,6 +102,270 @@ html, body {
             }
             &.status-red {
                 background-color: lightcoral;
+            }
+        }
+    }
+}
+
+/* Width-based responsive breakpoints */
+@media (max-width: 1200px) {
+    #room-layout {
+        --cell-size: 60px;
+
+        .student-name {
+            font-size: 12px;
+        }
+    }
+}
+
+@media (max-width: 992px) {
+    #room-layout {
+        --cell-size: 50px;
+        padding: 12px;
+
+        .student-name {
+            font-size: 11px;
+        }
+
+        .row {
+            margin: 12px 0;
+        }
+    }
+}
+
+@media (max-width: 768px) {
+    #room-layout {
+        --cell-size: 40px;
+        padding: 8px;
+
+        .student-name {
+            font-size: 10px;
+        }
+
+        .row {
+            margin: 8px 0;
+            gap: 4px;
+        }
+
+        .semaphore {
+            gap: 24px;
+        }
+    }
+}
+
+@media (max-width: 576px) {
+    #room-layout {
+        --cell-size: 35px;
+
+        .student-name {
+            font-size: 9px;
+        }
+
+        .semaphore {
+            gap: 16px;
+
+            .semaphore-state {
+                width: 56px;
+                height: 56px;
+            }
+        }
+    }
+}
+
+@media (max-width: 480px) {
+    #room-layout {
+        --cell-size: 30px;
+
+        .student-name {
+            font-size: 8px;
+        }
+
+        .row {
+            gap: 2px;
+        }
+
+        .semaphore {
+            gap: 12px;
+
+            .semaphore-state {
+                width: 48px;
+                height: 48px;
+            }
+        }
+    }
+}
+
+/* Height-based responsive breakpoints */
+@media (max-height: 800px) {
+    #room-layout {
+        --cell-size: 55px;
+        padding: 12px;
+
+        .student-name {
+            font-size: 11px;
+        }
+
+        .row {
+            margin: 10px 0;
+        }
+
+        .semaphore {
+            margin-top: 12px;
+        }
+    }
+}
+
+@media (max-height: 700px) {
+    #room-layout {
+        --cell-size: 45px;
+        padding: 8px;
+
+        .student-name {
+            font-size: 10px;
+        }
+
+        .row {
+            margin: 8px 0;
+        }
+
+        .semaphore {
+            margin-top: 8px;
+            gap: 24px;
+        }
+    }
+}
+
+@media (max-height: 600px) {
+    #room-layout {
+        --cell-size: 35px;
+        padding: 6px;
+
+        .student-name {
+            font-size: 9px;
+        }
+
+        .row {
+            margin: 6px 0;
+        }
+
+        .semaphore {
+            margin-top: 6px;
+            gap: 20px;
+
+            .semaphore-state {
+                width: 56px;
+                height: 56px;
+            }
+        }
+    }
+}
+
+@media (max-height: 500px) {
+    #room-layout {
+        --cell-size: 28px;
+        padding: 4px;
+
+        .student-name {
+            font-size: 8px;
+        }
+
+        .row {
+            margin: 4px 0;
+        }
+
+        .semaphore {
+            margin-top: 4px;
+            gap: 16px;
+
+            .semaphore-state {
+                width: 48px;
+                height: 48px;
+            }
+        }
+    }
+}
+
+@media (max-height: 400px) {
+    #room-layout {
+        --cell-size: 22px;
+        padding: 2px;
+
+        .student-name {
+            font-size: 7px;
+        }
+
+        .row {
+            margin: 2px 0;
+        }
+
+        .cell-wrapper {
+            gap: 3px;
+        }
+
+        .semaphore {
+            margin-top: 2px;
+            gap: 12px;
+
+            .semaphore-state {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    }
+}
+
+/* Combined width and height constraints for very small screens */
+@media (max-width: 768px) and (max-height: 600px) {
+    #room-layout {
+        --cell-size: 30px;
+        padding: 4px;
+
+        .student-name {
+            font-size: 8px;
+        }
+
+        .row {
+            margin: 4px 0;
+            gap: 2px;
+        }
+
+        .semaphore {
+            margin-top: 4px;
+            gap: 12px;
+
+            .semaphore-state {
+                width: 44px;
+                height: 44px;
+            }
+        }
+    }
+}
+
+@media (max-width: 576px) and (max-height: 500px) {
+    #room-layout {
+        --cell-size: 25px;
+        padding: 2px;
+
+        .student-name {
+            font-size: 7px;
+        }
+
+        .row {
+            margin: 2px 0;
+            gap: 1px;
+        }
+
+        .cell-wrapper {
+            gap: 2px;
+        }
+
+        .semaphore {
+            margin-top: 2px;
+            gap: 8px;
+
+            .semaphore-state {
+                width: 36px;
+                height: 36px;
             }
         }
     }
