@@ -1,58 +1,16 @@
 <!DOCTYPE html>
+<!--suppress HtmlUnknownTarget -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>Room</title>
     <script src="static/room.js"></script>
-    <style>
-        html, body {
-            margin: 0;
-            padding: 0;
-            width: 100vw;
-            height: 100vh;
-        }
-
-        #room-layout {
-            --cell-size: 70px;
-            padding: 16px;
-
-            .row {
-                width: 100%;
-                display: flex;
-                justify-content: space-evenly;
-                margin: 16px 0;
-            }
-
-            .cell-wrapper {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 6px;
-            }
-
-            .cell {
-                width: var(--cell-size);
-                height: var(--cell-size);
-                box-sizing: border-box;
-                border-radius: 8px;
-                display: inline-block;
-                border: 1px solid transparent;
-
-                &.computer {
-                    background-color: gray;
-                }
-            }
-
-            .student-name {
-                font-size: 13px;
-                text-align: center;
-                max-width: var(--cell-size);
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="static/room.css">
+    <script>
+        window.addEventListener('load', () => {
+            initRoom('{{ room_id }}', document.getElementById('room-layout'))
+        })
+    </script>
 </head>
 <body>
 <div id="room-layout"></div>

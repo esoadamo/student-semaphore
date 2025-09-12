@@ -1,17 +1,22 @@
-const ROOM = [
-    ['X', 'X', 'X', 'X'],
-    ['X', 'X', 'X', 'X'],
-    ['X', ' ', ' ', 'X'],
-    ['X', ' ', ' ', 'X'],
-    ['X', ' ', ' ', 'X'],
-    ['X', ' ', ' ', 'X'],
-    ['X', ' ', ' ', ' '],
-]
+/**
+ * @typedef {{name: string, status: string | null}} ComputerStatus
+ * @typedef {(ComputerStatus | null)[][]} RoomLayout
+ */
 
-window.addEventListener('load', async () => {
-    const layout = document.getElementById('room-layout');
+/**
+ * Load the room layout from a predefined configuration
+ * @param roomId {string}
+ * @returns {Promise<RoomLayout>} The room layout
+ */
+async function fetchRoomStatus(roomId) {
+    const response = await fetch(`api/room/${roomId}`);
+    return response.json();
+}
 
-    ROOM.forEach((row, rIndex) => {
+async function refreshRoomStatus(roomId, layoutElement) {
+    const room = await fetchRoomStatus(roomId);
+    layoutElement.innerHTML = '';
+    room.forEach((row, rIndex) => {
         const rowDiv = document.createElement('div');
         rowDiv.classList.add('row');
 
@@ -24,21 +29,33 @@ window.addEventListener('load', async () => {
             cellWrapper.dataset.col = String(cIndex);
 
             const cellDiv = document.createElement('div');
-            cellDiv.classList.add('cell');
-            if (cell === 'X') {
-                cellDiv.classList.add('computer');
-            }
-
-            // student name element below the cell (initially empty)
             const nameDiv = document.createElement('div');
             nameDiv.classList.add('student-name');
-            nameDiv.textContent = ''; // fill later with actual student names
+            nameDiv.textContent = '';
+            cellDiv.classList.add('cell');
+            if (cell != null) {
+                cellDiv.classList.add('computer');
+                cellDiv.classList.add(`status-${cell.status}`);
+                cellDiv.dataset.computer = JSON.stringify(cell);
+                nameDiv.textContent = cell.name;
+            }
 
             cellWrapper.appendChild(cellDiv);
             cellWrapper.appendChild(nameDiv);
             rowDiv.appendChild(cellWrapper);
         });
 
-        layout.appendChild(rowDiv);
+        layoutElement.appendChild(rowDiv);
     });
-});
+}
+
+/**
+ * Initialize the room layout
+ * @param roomId {string}
+ * @param layoutElement {HTMLElement}
+ * @returns {Promise<number>}
+ */
+async function initRoom(roomId, layoutElement) {
+    await refreshRoomStatus(roomId, layoutElement);
+    return setInterval(() => refreshRoomStatus(roomId, layoutElement), 7000);
+}
