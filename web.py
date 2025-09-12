@@ -1,6 +1,6 @@
 import json
 
-from flask import Flask, render_template, Blueprint, session, abort, redirect, url_for, request
+from flask import Flask, render_template, Blueprint, session, abort, redirect, url_for, request, send_from_directory
 from pathlib import Path
 from typing import NotRequired, TypedDict
 
@@ -8,6 +8,7 @@ from typing import NotRequired, TypedDict
 DIR_ROOT = Path(__file__).parent.resolve()
 DIR_STATIC = DIR_ROOT / 'static'
 DIR_TEMPLATES = DIR_ROOT / 'templates'
+DIR_MODULES = DIR_ROOT / 'modules'
 
 ROOM = [
     [{'name': '', 'hostname': None, 'status': None}, {'name': '', 'hostname': None, 'status': None}, {'name': '', 'hostname': None, 'status': None}, {'name': '', 'hostname': None, 'status': None}],
@@ -23,6 +24,7 @@ ROOM = [
 class LoginSession(TypedDict):
     hostname: str
     room_id: str
+    username: NotRequired[str]
     is_admin: NotRequired[bool]
 
 
@@ -55,10 +57,11 @@ def init_web_app(app_root: Flask, route_prefix: str = '/'):
         if request.method == 'POST':
             hostname = request.form.get('hostname')
             room_id = request.form.get('room_id')
+            username = request.form.get('username', '')
             if not hostname or not room_id:
                 abort(401)
             # TODO secret validation
-            session['student-semaphore::login'] = json.dumps(LoginSession(hostname=hostname, room_id=room_id, is_admin=False))
+            session['student-semaphore::login'] = json.dumps(LoginSession(hostname=hostname, room_id=room_id, username=username, is_admin=False))
             return redirect(url_for('.app_index'))
         return render_template('login.html')
 
@@ -78,12 +81,14 @@ def init_web_app(app_root: Flask, route_prefix: str = '/'):
         if ROOM[target_row][target_col] is None or ROOM[target_row][target_col]['hostname'] is not None:
             abort(403)
         # Clear previous assignment
+        current_status = None
         for r in range(len(ROOM)):
             for c in range(len(ROOM[r])):
                 if ROOM[r][c] is not None and ROOM[r][c]['hostname'] == hostname:
+                    current_status = ROOM[r][c]['status']
                     ROOM[r][c] = {'name': '', 'hostname': None, 'status': None}
         # Assign new seat
-        ROOM[target_row][target_col] = {'name': '', 'hostname': hostname, 'status': None}
+        ROOM[target_row][target_col] = {'name': login.get('username', ''), 'hostname': hostname, 'status': current_status}
         return {'success': True}
 
     @app.route('/api/room/status', methods=['POST'])
@@ -109,5 +114,13 @@ def init_web_app(app_root: Flask, route_prefix: str = '/'):
                     ROOM[r][c]['name'] = name
                     return {'success': True}
         abort(403)
+
+    @app.route('/api/module')
+    def app_api_get_module():
+        login = get_session()
+        file_module = DIR_MODULES / f"{login['room_id']}.py"
+        if not file_module.exists():
+            file_module = DIR_MODULES / 'default.py'
+        return send_from_directory(DIR_MODULES, file_module.relative_to(DIR_MODULES))
 
     app_root.register_blueprint(app)

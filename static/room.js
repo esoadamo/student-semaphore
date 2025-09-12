@@ -34,6 +34,25 @@ async function setComputerStatus(status) {
     });
 }
 
+// noinspection JSUnusedGlobalSymbols
+async function setComputerName(name) {
+    await fetch(`api/room/name`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ name })
+    });
+}
+
+async function fetchModule() {
+    const response = await fetch(`api/module`);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch module: ${response.statusText}`);
+    }
+    window.semaphore_module = await response.text();
+}
+
 async function refreshRoomStatus(hostname, layoutElement) {
     const room = await fetchRoomStatus();
 
@@ -113,5 +132,6 @@ async function refreshRoomStatus(hostname, layoutElement) {
 async function initRoom(hostname, layoutElement) {
     await setComputerStatus('green');
     await refreshRoomStatus(hostname, layoutElement);
+    await fetchModule();
     return setInterval(() => refreshRoomStatus(hostname, layoutElement), 7000);
 }
