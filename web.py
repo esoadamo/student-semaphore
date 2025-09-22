@@ -3,14 +3,28 @@ import json
 from flask import Flask, render_template, Blueprint, session, abort, redirect, url_for, request, send_from_directory
 from pathlib import Path
 from typing import NotRequired, TypedDict
+from dictature import Dictature
+from dictature.backend import DictatureBackendSQLite
 
 
 DIR_ROOT = Path(__file__).parent.resolve()
 DIR_STATIC = DIR_ROOT / 'static'
 DIR_TEMPLATES = DIR_ROOT / 'templates'
 DIR_MODULES = DIR_ROOT / 'modules'
+DIR_DATA = DIR_ROOT / 'data'
 
-ROOM = [
+
+class RoomSeat(TypedDict):
+    name: str
+    hostname: str | None
+    status: str | None
+    last_seen: NotRequired[int]
+
+
+Room = list[list[RoomSeat | None]]
+
+
+ROOM_TEMPLATE = [
     [{'name': '', 'hostname': None, 'status': None}, {'name': '', 'hostname': None, 'status': None}, {'name': '', 'hostname': None, 'status': None}, {'name': '', 'hostname': None, 'status': None}],
     [{'name': '', 'hostname': None, 'status': None}, {'name': '', 'hostname': None, 'status': None}, {'name': '', 'hostname': None, 'status': None}, {'name': '', 'hostname': None, 'status': None}],
     [{'name': '', 'hostname': None, 'status': None}, None, None, {'name': '', 'hostname': None, 'status': None}],
@@ -43,6 +57,21 @@ def init_web_app(app_root: Flask, route_prefix: str = '/'):
         url_prefix=route_prefix,
     )
 
+    for directory in (DIR_MODULES, DIR_DATA):
+        directory.mkdir(parents=True, exist_ok=True)
+
+    storage = Dictature(DictatureBackendSQLite(DIR_DATA / 'data.sqlite3'))
+
+    def get_room(room_code: str) -> Room:
+        table = storage['rooms']
+        if room_code not in table:
+            return ROOM_TEMPLATE
+        return table[room_code]
+
+    def save_room(room_code: str, room: Room) -> None:
+        table = storage['rooms']
+        table[room_code] = room
+
     @app.route('/')
     def app_index():
         login = get_session()
@@ -67,8 +96,8 @@ def init_web_app(app_root: Flask, route_prefix: str = '/'):
 
     @app.route('/api/room')
     def app_api_get_room():
-        get_session()
-        return ROOM
+        login = get_session()
+        return get_room(login['room_id'])
 
     @app.route('/api/room/assign', methods=['POST'])
     def app_api_room_assign():
@@ -76,19 +105,29 @@ def init_web_app(app_root: Flask, route_prefix: str = '/'):
         hostname = login['hostname']
         target_row = int(request.json.get('row', -1))
         target_col = int(request.json.get('col', -1))
-        if target_row < 0 or target_row >= len(ROOM) or target_col < 0 or target_col >= len(ROOM[0]):
+        room = get_room(login['room_id'])
+        if target_row < 0 or target_row >= len(room) or target_col < 0 or target_col >= len(room[0]):
             abort(400)
-        if ROOM[target_row][target_col] is None or ROOM[target_row][target_col]['hostname'] is not None:
+        if room[target_row][target_col] is None or room[target_row][target_col]['hostname'] is not None:
             abort(403)
         # Clear previous assignment
         current_status = None
-        for r in range(len(ROOM)):
-            for c in range(len(ROOM[r])):
-                if ROOM[r][c] is not None and ROOM[r][c]['hostname'] == hostname:
-                    current_status = ROOM[r][c]['status']
-                    ROOM[r][c] = {'name': '', 'hostname': None, 'status': None}
+        for r in range(len(room)):
+            for c in range(len(room[r])):
+                if room[r][c] is not None and room[r][c]['hostname'] == hostname:
+                    current_status = room[r][c]['status']
+                    room[r][c] = RoomSeat(
+                        name='',
+                        hostname=None,
+                        status=None,
+                    )
         # Assign new seat
-        ROOM[target_row][target_col] = {'name': login.get('username', ''), 'hostname': hostname, 'status': current_status}
+        room[target_row][target_col] = RoomSeat(
+            name=login.get('username', ''),
+            hostname=hostname,
+            status=current_status,
+        )
+        save_room(login['room_id'], room)
         return {'success': True}
 
     @app.route('/api/room/status', methods=['POST'])
@@ -96,10 +135,12 @@ def init_web_app(app_root: Flask, route_prefix: str = '/'):
         login = get_session()
         hostname = login['hostname']
         status = request.json.get('status')
-        for r in range(len(ROOM)):
-            for c in range(len(ROOM[r])):
-                if ROOM[r][c] is not None and ROOM[r][c]['hostname'] == hostname:
-                    ROOM[r][c]['status'] = status
+        room = get_room(login['room_id'])
+        for r in range(len(room)):
+            for c in range(len(room[r])):
+                if room[r][c] is not None and room[r][c]['hostname'] == hostname:
+                    room[r][c]['status'] = status
+                    save_room(login['room_id'], room)
                     return {'success': True}
         abort(403)
 
@@ -108,10 +149,12 @@ def init_web_app(app_root: Flask, route_prefix: str = '/'):
         login = get_session()
         hostname = login['hostname']
         name = request.json.get('name')
-        for r in range(len(ROOM)):
-            for c in range(len(ROOM[r])):
-                if ROOM[r][c] is not None and ROOM[r][c]['hostname'] == hostname:
-                    ROOM[r][c]['name'] = name
+        room = get_room(login['room_id'])
+        for r in range(len(room)):
+            for c in range(len(room[r])):
+                if room[r][c] is not None and room[r][c]['hostname'] == hostname:
+                    room[r][c]['name'] = name
+                    save_room(login['room_id'], room)
                     return {'success': True}
         abort(403)
 
