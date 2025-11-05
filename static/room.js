@@ -107,7 +107,7 @@ async function refreshRoomStatus(hostname, layoutElement) {
         // Semaphore will allow to select the state of the computer
         const semaphoreDiv = document.createElement('div');
         semaphoreDiv.classList.add('semaphore');
-        const states = ['green', 'yellow', 'red'];
+        const states = ['blue', 'green', 'yellow', 'red'];
         states.forEach(state => {
             const stateDiv = document.createElement('div');
             stateDiv.classList.add('semaphore-state');

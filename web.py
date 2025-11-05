@@ -2,6 +2,8 @@ import json
 
 from flask import Flask, render_template, Blueprint, session, abort, redirect, url_for, request, send_from_directory
 from pathlib import Path
+from time import time
+from itertools import chain
 from typing import NotRequired, TypedDict
 from dictature import Dictature
 from dictature.backend import DictatureBackendSQLite
@@ -42,12 +44,6 @@ class LoginSession(TypedDict):
     is_admin: NotRequired[bool]
 
 
-def get_session() -> LoginSession:
-    if 'student-semaphore::login' not in session:
-        abort(401)
-    return json.loads(session['student-semaphore::login'])
-
-
 def init_web_app(app_root: Flask, route_prefix: str = '/'):
     app = Blueprint(
         f'web_{route_prefix}',
@@ -62,11 +58,34 @@ def init_web_app(app_root: Flask, route_prefix: str = '/'):
 
     storage = Dictature(DictatureBackendSQLite(DIR_DATA / 'data.sqlite3'))
 
+    def update_last_seen(login: LoginSession):
+        hostname = login['hostname']
+        room_code = login['room_id']
+        room = get_room(room_code)
+        changed = False
+        for seat in chain(*room):
+            if seat and seat["hostname"] == hostname:
+                seat["last_seen"] = int(time())
+                changed = True
+        if changed:
+            save_room(room_code, room)
+
+    def get_session() -> LoginSession:
+        if 'student-semaphore::login' not in session:
+            abort(401)
+        login_session: LoginSession = json.loads(session['student-semaphore::login'])
+        update_last_seen(login_session)
+        return login_session
+
     def get_room(room_code: str) -> Room:
         table = storage['rooms']
         if room_code not in table:
             return ROOM_TEMPLATE
-        return table[room_code]
+        room: Room = table[room_code]
+        for seat in chain(*room):
+            if seat and seat.get('last_seen', 0) < int(time()) - 600:
+                seat['status'] = None
+        return room
 
     def save_room(room_code: str, room: Room) -> None:
         table = storage['rooms']

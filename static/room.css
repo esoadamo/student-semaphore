@@ -56,6 +56,10 @@ html, body {
             &.status-red {
                 background-color: lightcoral;
             }
+            &.status-blue {
+                background-color: lightblue;
+            }
+
 
             &.unassigned {
                 background-color: gray;
@@ -102,6 +106,9 @@ html, body {
             }
             &.status-red {
                 background-color: lightcoral;
+            }
+            &.status-blue {
+                background-color: lightblue;
             }
         }
     }
